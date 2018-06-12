@@ -3,7 +3,6 @@ import { BLANK } from '../../utils/blank';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
 import CallOptions from '../CallOptions';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
-import { EntityPathTracker } from '../utils/EntityPathTracker';
 import {
 	EMPTY_IMMUTABLE_TRACKER,
 	ImmutableEntityPathTracker
@@ -17,11 +16,7 @@ import {
 } from '../values';
 import CallExpression from './CallExpression';
 import * as NodeType from './NodeType';
-import {
-	ExpressionEntity,
-	ForEachReturnExpressionCallback,
-	SomeReturnExpressionCallback
-} from './shared/Expression';
+import { ExpressionEntity } from './shared/Expression';
 import { ExpressionNode, NodeBase } from './shared/Node';
 
 export type LogicalOperator = '||' | '&&';
@@ -34,45 +29,6 @@ export default class LogicalExpression extends NodeBase {
 
 	private hasUnknownLeftValue: boolean;
 	private isOrExpression: boolean;
-
-	forEachReturnExpressionWhenCalledAtPath(
-		path: ObjectPath,
-		callOptions: CallOptions,
-		callback: ForEachReturnExpressionCallback,
-		calledPathTracker: EntityPathTracker
-	) {
-		const leftValue = this.hasUnknownLeftValue
-			? UNKNOWN_VALUE
-			: this.getLeftValue(EMPTY_IMMUTABLE_TRACKER);
-		if (leftValue === UNKNOWN_VALUE) {
-			this.left.forEachReturnExpressionWhenCalledAtPath(
-				path,
-				callOptions,
-				callback,
-				calledPathTracker
-			);
-			this.right.forEachReturnExpressionWhenCalledAtPath(
-				path,
-				callOptions,
-				callback,
-				calledPathTracker
-			);
-		} else if (this.isOrExpression ? leftValue : !leftValue) {
-			this.left.forEachReturnExpressionWhenCalledAtPath(
-				path,
-				callOptions,
-				callback,
-				calledPathTracker
-			);
-		} else {
-			this.right.forEachReturnExpressionWhenCalledAtPath(
-				path,
-				callOptions,
-				callback,
-				calledPathTracker
-			);
-		}
-	}
 
 	getLiteralValueAtPath(
 		path: ObjectPath,
@@ -222,48 +178,6 @@ export default class LogicalExpression extends NodeBase {
 		} else {
 			super.render(code, options);
 		}
-	}
-
-	someReturnExpressionWhenCalledAtPath(
-		path: ObjectPath,
-		callOptions: CallOptions,
-		predicateFunction: SomeReturnExpressionCallback,
-		options: ExecutionPathOptions
-	): boolean {
-		const leftValue = this.hasUnknownLeftValue
-			? UNKNOWN_VALUE
-			: this.getLeftValue(EMPTY_IMMUTABLE_TRACKER);
-		if (leftValue === UNKNOWN_VALUE) {
-			return (
-				this.left.someReturnExpressionWhenCalledAtPath(
-					path,
-					callOptions,
-					predicateFunction,
-					options
-				) ||
-				this.right.someReturnExpressionWhenCalledAtPath(
-					path,
-					callOptions,
-					predicateFunction,
-					options
-				)
-			);
-		}
-		return (this.isOrExpression
-		? leftValue
-		: !leftValue)
-			? this.left.someReturnExpressionWhenCalledAtPath(
-					path,
-					callOptions,
-					predicateFunction,
-					options
-			  )
-			: this.right.someReturnExpressionWhenCalledAtPath(
-					path,
-					callOptions,
-					predicateFunction,
-					options
-			  );
 	}
 
 	private getLeftValue(getValueTracker: ImmutableEntityPathTracker) {

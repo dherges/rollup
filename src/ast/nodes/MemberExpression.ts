@@ -4,7 +4,6 @@ import relativeId from '../../utils/relativeId';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
 import CallOptions from '../CallOptions';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
-import { EntityPathTracker } from '../utils/EntityPathTracker';
 import {
 	EMPTY_IMMUTABLE_TRACKER,
 	ImmutableEntityPathTracker
@@ -23,7 +22,6 @@ import Variable from '../variables/Variable';
 import Identifier from './Identifier';
 import Literal from './Literal';
 import * as NodeType from './NodeType';
-import { ForEachReturnExpressionCallback, SomeReturnExpressionCallback } from './shared/Expression';
 import { ExpressionNode, Node, NodeBase } from './shared/Node';
 
 function getPropertyKey(memberExpression: MemberExpression): string | null {
@@ -95,30 +93,6 @@ export default class MemberExpression extends NodeBase {
 			}
 		} else {
 			super.bind();
-		}
-	}
-
-	forEachReturnExpressionWhenCalledAtPath(
-		path: ObjectPath,
-		callOptions: CallOptions,
-		callback: ForEachReturnExpressionCallback,
-		calledPathTracker: EntityPathTracker
-	) {
-		if (!this.bound) this.bind();
-		if (this.variable !== null) {
-			this.variable.forEachReturnExpressionWhenCalledAtPath(
-				path,
-				callOptions,
-				callback,
-				calledPathTracker
-			);
-		} else {
-			this.object.forEachReturnExpressionWhenCalledAtPath(
-				[this.propertyKey || this.getComputedKey(EMPTY_IMMUTABLE_TRACKER), ...path],
-				callOptions,
-				callback,
-				calledPathTracker
-			);
 		}
 	}
 
@@ -251,28 +225,6 @@ export default class MemberExpression extends NodeBase {
 			}
 			super.render(code, options);
 		}
-	}
-
-	someReturnExpressionWhenCalledAtPath(
-		path: ObjectPath,
-		callOptions: CallOptions,
-		predicateFunction: SomeReturnExpressionCallback,
-		options: ExecutionPathOptions
-	): boolean {
-		if (this.variable) {
-			return this.variable.someReturnExpressionWhenCalledAtPath(
-				path,
-				callOptions,
-				predicateFunction,
-				options
-			);
-		}
-		return this.object.someReturnExpressionWhenCalledAtPath(
-			[this.propertyKey || this.getComputedKey(EMPTY_IMMUTABLE_TRACKER), ...path],
-			callOptions,
-			predicateFunction,
-			options
-		);
 	}
 
 	private disallowNamespaceReassignment() {
